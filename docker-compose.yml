@@ -1,0 +1,70 @@
+# =============================================================================
+# caddy — Reverse proxy + TLS for all am180.us services
+# Custom build with caddy-dns/cloudflare plugin for DNS-01 ACME
+# 2026-02-21 v1.1.0 — custom image build
+# =============================================================================
+
+services:
+  caddy:
+    build:
+      context: /srv/docker/caddy
+      dockerfile: Dockerfile
+    image: caddy-cloudflare:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:443:443/udp"
+    volumes:
+      - /srv/docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /srv/docker/caddy/Caddyfile.d:/etc/caddy/Caddyfile.d:ro
+      - /srv/docker/caddy/data:/data
+      - /srv/docker/caddy/config:/config
+      - /srv/docker/caddy/logs:/logs
+      - /srv/docker/caddy/www:/www:ro
+    environment:
+      - ACME_EMAIL=matt@am180.us
+      - CF_API_TOKEN_FILE=/run/secrets/cf_api_token
+    secrets:
+      - cf_api_token
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - caddy-net
+      - arr-net
+      - indexers-net
+      - observability
+      - cross-seed-net
+      - music-net
+    labels:
+      - stack=proxy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+secrets:
+  cf_api_token:
+    file: /srv/docker/secrets/cf_dns_token.txt
+
+networks:
+  caddy-net:
+    name: caddy-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.26.0.0/24
+  arr-net:
+    external: true
+  indexers-net:
+    external: true
+  observability:
+    external: true
+  music-net:
+    external: true
+    name: music-net
+
+  cross-seed-net:
+    external: true

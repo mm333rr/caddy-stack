@@ -1,0 +1,16 @@
+# Secrets — NEVER commit
+/data/
+/config/
+/logs/
+secrets/
+*.txt
+*.key
+*.pem
+*.crt
+*.p12
+
+# Keep www content
+!www/
+
+# Runtime
+*.sock

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Capes · Stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --surface: #0d1219;
+    --border: rgba(96,165,250,0.12);
+    --border-hover: rgba(96,165,250,0.4);
+    --accent: #60a5fa;
+    --accent2: #34d399;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(96,165,250,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(96,165,250,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
+  }
+  .orb-1 { width: 600px; height: 600px; background: #1d4ed8; top: -200px; left: -200px; }
+  .orb-2 { width: 400px; height: 400px; background: #065f46; bottom: -100px; right: -100px; }
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+  header {
+    padding: 48px 0 36px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .header-left { display: flex; flex-direction: column; gap: 6px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+  h1 {
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  h1 span { color: var(--accent); }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 100px;
+    padding: 6px 14px;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    animation: fadeUp 0.4s ease both;
+  }
+  .card:hover, .card:active {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .card-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted);
+  }
+  .card-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .card-desc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .card-url {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--card-accent, var(--accent));
+    opacity: 0.6;
+    margin-top: auto;
+  }
+  .card-url::before { content: '→ '; }
+  .c-blue   { --card-accent: #60a5fa; }
+  .c-green  { --card-accent: #34d399; }
+  .c-orange { --card-accent: #fb923c; }
+  .c-purple { --card-accent: #a78bfa; }
+  .c-cyan   { --card-accent: #22d3ee; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.10s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.20s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.30s; }
+  .card:nth-child(7) { animation-delay: 0.35s; }
+  .card:nth-child(8) { animation-delay: 0.40s; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .pets { font-size: 20px; letter-spacing: 4px; }
+  @media (max-width: 600px) {
+    .wrapper { padding: 0 16px 40px; }
+    header { padding: 28px 0 24px; }
+    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card { padding: 14px 15px; gap: 8px; }
+    .card-desc, .card-url { display: none; }
+    .card-name { font-size: 13px; }
+    .card-icon { width: 30px; height: 30px; font-size: 15px; }
+  }
+  @media (max-width: 360px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="wrapper">
+
+  <header>
+    <div class="header-left">
+      <span class="eyebrow">mbuntu · 192.168.1.35</span>
+      <h1>The Capes <span>Stack</span></h1>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      All systems nominal
+    </div>
+  </header>
+
+  <div class="section-label">Media</div>
+  <div class="grid">
+    <a href="https://overseerr.am180.us" class="card c-blue">
+      <div class="card-top">
+        <div class="card-icon">🎬</div>
+        <span class="card-badge">Public</span>
+      </div>
+      <div class="card-name">Overseerr</div>
+      <div class="card-desc">Request movies & TV shows · discover new content</div>
+      <div class="card-url">overseerr.am180.us</div>
+    </a>
+    <a href="https://sonarr.am180.us" class="card c-blue">
+      <div class="card-top">
+        <div class="card-icon">📺</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Sonarr</div>
+      <div class="card-desc">TV series automation · monitor & grab episodes</div>
+      <div class="card-url">sonarr.am180.us</div>
+    </a>
+    <a href="https://radarr.am180.us" class="card c-blue">
+      <div class="card-top">
+        <div class="card-icon">🎥</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Radarr</div>
+      <div class="card-desc">Movie automation · quality profiles & upgrades</div>
+      <div class="card-url">radarr.am180.us</div>
+    </a>
+    <a href="https://lidarr.am180.us" class="card c-green">
+      <div class="card-top">
+        <div class="card-icon">🎵</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Lidarr</div>
+      <div class="card-desc">Music collection manager · artist tracking</div>
+      <div class="card-url">lidarr.am180.us</div>
+    </a>
+  </div>
+
+  <div class="section-label">Music Tools</div>
+  <div class="grid">
+    <a href="http://192.168.1.35:5000" class="card c-green">
+      <div class="card-top">
+        <div class="card-icon">📥</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">LidaTube</div>
+      <div class="card-desc">YouTube music downloader for Lidarr</div>
+      <div class="card-url">192.168.1.35:5000</div>
+    </a>
+    <a href="http://192.168.1.35:5001" class="card c-green">
+      <div class="card-top">
+        <div class="card-icon">🔄</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Syncify</div>
+      <div class="card-desc">Spotify playlist sync to local library</div>
+      <div class="card-url">192.168.1.35:5001</div>
+    </a>
+    <a href="http://192.168.1.35:5002" class="card c-green">
+      <div class="card-top">
+        <div class="card-icon">🎧</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Lidify</div>
+      <div class="card-desc">Spotify artist importer for Lidarr</div>
+      <div class="card-url">192.168.1.35:5002</div>
+    </a>
+  </div>
+
+  <div class="section-label">Indexers &amp; Torrents</div>
+  <div class="grid">
+    <a href="https://prowlarr.am180.us" class="card c-orange">
+      <div class="card-top">
+        <div class="card-icon">🔍</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Prowlarr</div>
+      <div class="card-desc">Indexer manager for all *arr apps</div>
+      <div class="card-url">prowlarr.am180.us</div>
+    </a>
+    <a href="https://jackett.am180.us" class="card c-orange">
+      <div class="card-top">
+        <div class="card-icon">🗂️</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Jackett</div>
+      <div class="card-desc">Torznab proxy for extra indexers</div>
+      <div class="card-url">jackett.am180.us</div>
+    </a>
+    <a href="https://bitmagnet.am180.us" class="card c-orange">
+      <div class="card-top">
+        <div class="card-icon">🧲</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Bitmagnet</div>
+      <div class="card-desc">Self-hosted BitTorrent indexer & search</div>
+      <div class="card-url">bitmagnet.am180.us</div>
+    </a>
+    <a href="https://qbit.am180.us" class="card c-orange">
+      <div class="card-top">
+        <div class="card-icon">⬇️</div>
+        <span class="card-badge">LAN · VPN</span>
+      </div>
+      <div class="card-name">qBittorrent</div>
+      <div class="card-desc">Download client behind Gluetun VPN</div>
+      <div class="card-url">qbit.am180.us</div>
+    </a>
+    <a href="http://192.168.1.35:2468" class="card c-orange">
+      <div class="card-top">
+        <div class="card-icon">🌱</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Cross-Seed</div>
+      <div class="card-desc">Automated cross-seeding for torrents</div>
+      <div class="card-url">192.168.1.35:2468</div>
+    </a>
+  </div>
+
+  <div class="section-label">Observability</div>
+  <div class="grid">
+    <a href="https://grafana.am180.us" class="card c-purple">
+      <div class="card-top">
+        <div class="card-icon">📊</div>
+        <span class="card-badge">Public</span>
+      </div>
+      <div class="card-name">Grafana</div>
+      <div class="card-desc">Metrics dashboards · system health · alerts</div>
+      <div class="card-url">grafana.am180.us</div>
+    </a>
+    <a href="https://prometheus.am180.us" class="card c-purple">
+      <div class="card-top">
+        <div class="card-icon">🔥</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Prometheus</div>
+      <div class="card-desc">Metrics collection · query & explore</div>
+      <div class="card-url">prometheus.am180.us</div>
+    </a>
+    <a href="https://alertmanager.am180.us" class="card c-purple">
+      <div class="card-top">
+        <div class="card-icon">🔔</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">Alertmanager</div>
+      <div class="card-desc">Alert routing, grouping & silencing</div>
+      <div class="card-url">alertmanager.am180.us</div>
+    </a>
+    <a href="http://192.168.1.5:8080" class="card c-purple">
+      <div class="card-top">
+        <div class="card-icon">🐳</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">cAdvisor</div>
+      <div class="card-desc">Container resource usage & performance</div>
+      <div class="card-url">192.168.1.5:8080</div>
+    </a>
+  </div>
+
+  <div class="section-label">Network &amp; Security</div>
+  <div class="grid">
+    <a href="https://adguard.am180.us" class="card c-cyan">
+      <div class="card-top">
+        <div class="card-icon">🛡️</div>
+        <span class="card-badge">LAN</span>
+      </div>
+      <div class="card-name">AdGuard Home</div>
+      <div class="card-desc">DNS-level ad blocking · local DNS records</div>
+      <div class="card-url">adguard.am180.us</div>
+    </a>
+    <a href="https://ca.capes.local:9000" class="card c-cyan">
+      <div class="card-top">
+        <div class="card-icon">🔐</div>
+        <span class="card-badge">LAN · Internal</span>
+      </div>
+      <div class="card-name">Step-CA</div>
+      <div class="card-desc">Internal certificate authority · ACME server</div>
+      <div class="card-url">ca.capes.local:9000</div>
+    </a>
+  </div>
+
+  <footer>
+    <span class="footer-text">stack.am180.us · The Capes, Ventura CA · mbuntu 192.168.1.35</span>
+    <span class="pets" title="Paco 🐕 · Marcia 🐱 · Torta 🐱">🐕🐱🐱</span>
+  </footer>
+
+</div>
+</body>
+</html>

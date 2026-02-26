@@ -1,0 +1,131 @@
+# =============================================================================
+# Caddyfile — am180.us reverse proxy
+# Wildcard cert via Cloudflare DNS-01 challenge.
+# CF_API_TOKEN_FILE injected via Docker secret → /run/secrets/cf_api_token
+# =============================================================================
+
+{
+  email {$ACME_EMAIL}
+  admin off
+
+  log {
+    output file /logs/caddy-global.log {
+      roll_size 50MiB
+      roll_keep 5
+      roll_keep_for 720h
+    }
+    format json
+    level INFO
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Shared TLS snippet — wildcard *.am180.us via Cloudflare DNS-01
+# ---------------------------------------------------------------------------
+(tls_wildcard) {
+  tls {
+    dns cloudflare {file.{$CF_API_TOKEN_FILE}}
+    resolvers 1.1.1.1
+  }
+}
+
+# LAN-only access snippet
+(lan_only) {
+  @external not remote_ip 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 127.0.0.1/8
+  respond @external "Forbidden" 403
+}
+
+# ---------------------------------------------------------------------------
+# Observability
+# ---------------------------------------------------------------------------
+
+grafana.am180.us {
+  import tls_wildcard
+  reverse_proxy grafana:3000
+}
+
+prometheus.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy prometheus:9090
+}
+
+alertmanager.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy alertmanager:9093
+}
+
+# ---------------------------------------------------------------------------
+# Media / arr stack
+# ---------------------------------------------------------------------------
+
+overseerr.am180.us {
+  import tls_wildcard
+  reverse_proxy arr-overseerr:5055
+}
+
+sonarr.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy arr-sonarr:8989
+}
+
+lidarr.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy music-lidarr:8686
+}
+
+radarr.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy arr-radarr:7878
+}
+
+prowlarr.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy indexers-prowlarr:9696
+}
+
+jackett.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy indexers-jackett:9117
+}
+
+bitmagnet.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy indexers-bitmagnet:3333
+}
+
+qbit.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy host.docker.internal:5555
+}
+
+# ---------------------------------------------------------------------------
+# HTTP → HTTPS redirect
+# ---------------------------------------------------------------------------
+http:// {
+  redir https://{host}{uri} permanent
+}
+
+adguard.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy host.docker.internal:3000
+}
+
+# ---------------------------------------------------------------------------
+# Stack landing page
+# ---------------------------------------------------------------------------
+stack.am180.us {
+  import tls_wildcard
+  import lan_only
+  root * /www/stack
+  file_server
+}

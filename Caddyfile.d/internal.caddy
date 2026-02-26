@@ -1,0 +1,62 @@
+# =============================================================================
+# internal.caddy — capes.local services via Step-CA
+# These are NOT publicly accessible. Caddy gets certs from internal Step-CA.
+# Step-CA ACME endpoint: https://ca.capes.local:9000/acme/acme/directory
+# =============================================================================
+
+(tls_internal) {
+  tls {
+    ca https://step-ca:9000/acme/acme/directory
+    ca_root /data/step-ca-root.crt
+  }
+}
+
+adguard.capes.local {
+  import tls_internal
+  reverse_proxy host.docker.internal:3000
+}
+
+ca.capes.local {
+  import tls_internal
+  reverse_proxy step-ca:9000
+}
+
+monitoring.capes.local {
+  import tls_internal
+  reverse_proxy grafana:3000
+}
+
+prometheus.capes.local {
+  import tls_internal
+  reverse_proxy prometheus:9090
+}
+
+loki.capes.local {
+  import tls_internal
+  reverse_proxy loki:3100
+}
+
+alertmanager.capes.local {
+  import tls_internal
+  reverse_proxy alertmanager:9093
+}
+
+sonarr.capes.local {
+  import tls_internal
+  reverse_proxy arr-sonarr:8989
+}
+
+radarr.capes.local {
+  import tls_internal
+  reverse_proxy arr-radarr:7878
+}
+
+overseerr.capes.local {
+  import tls_internal
+  reverse_proxy arr-overseerr:5055
+}
+
+prowlarr.capes.local {
+  import tls_internal
+  reverse_proxy indexers-prowlarr:9696
+}
