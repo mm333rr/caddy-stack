@@ -2,6 +2,7 @@
 # Caddyfile — am180.us reverse proxy
 # Wildcard cert via Cloudflare DNS-01 challenge.
 # CF_API_TOKEN_FILE injected via Docker secret → /run/secrets/cf_api_token
+# Last updated: 2026-02-26 — audit pass, removed lan_only from public-safe services
 # =============================================================================
 
 {
@@ -30,15 +31,33 @@
 }
 
 # LAN-only access snippet
+# Covers: LAN (192.168.x), Docker bridge (172.16-31.x), VPN/Tailscale (10.x), localhost
 (lan_only) {
   @external not remote_ip 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 127.0.0.1/8
   respond @external "Forbidden" 403
 }
 
 # ---------------------------------------------------------------------------
-# Observability
+# Stack landing page — PUBLIC (no lan_only — just links, no sensitive data)
+# iCloud Private Relay and WAN hairpin make lan_only incompatible with iOS
 # ---------------------------------------------------------------------------
+stack.am180.us {
+  import tls_wildcard
+  log {
+    output file /logs/caddy-access-stack.log {
+      roll_size 10MiB
+      roll_keep 3
+    }
+    format json
+    level DEBUG
+  }
+  root * /www/stack
+  file_server
+}
 
+# ---------------------------------------------------------------------------
+# Observability — Grafana public (has its own auth), others LAN-only
+# ---------------------------------------------------------------------------
 grafana.am180.us {
   import tls_wildcard
   reverse_proxy grafana:3000
@@ -57,12 +76,19 @@ alertmanager.am180.us {
 }
 
 # ---------------------------------------------------------------------------
-# Media / arr stack
+# Media / arr stack — all LAN-only, all auth disabled in app config
 # ---------------------------------------------------------------------------
+seerr.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy arr-overseerr:5055
+}
 
+# Legacy redirect — overseerr.am180.us -> seerr.am180.us
 overseerr.am180.us {
   import tls_wildcard
-  reverse_proxy arr-overseerr:5055
+  import lan_only
+  redir https://seerr.am180.us{uri} permanent
 }
 
 sonarr.am180.us {
@@ -83,6 +109,25 @@ radarr.am180.us {
   reverse_proxy arr-radarr:7878
 }
 
+# ---------------------------------------------------------------------------
+# Music tools — LAN-only with HTTPS (was HTTP-only on raw ports)
+# ---------------------------------------------------------------------------
+lidatube.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy music-lidatube:5000
+}
+
+
+lidify.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy music-lidify:5000
+}
+
+# ---------------------------------------------------------------------------
+# Indexers & Torrents — all LAN-only
+# ---------------------------------------------------------------------------
 prowlarr.am180.us {
   import tls_wildcard
   import lan_only
@@ -107,25 +152,30 @@ qbit.am180.us {
   reverse_proxy host.docker.internal:5555
 }
 
-# ---------------------------------------------------------------------------
-# HTTP → HTTPS redirect
-# ---------------------------------------------------------------------------
-http:// {
-  redir https://{host}{uri} permanent
+cross-seed.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy cross-seed:2468
 }
 
+# ---------------------------------------------------------------------------
+# Network & Security — all LAN-only
+# ---------------------------------------------------------------------------
 adguard.am180.us {
   import tls_wildcard
   import lan_only
   reverse_proxy host.docker.internal:3000
 }
 
-# ---------------------------------------------------------------------------
-# Stack landing page
-# ---------------------------------------------------------------------------
-stack.am180.us {
+cadvisor.am180.us {
   import tls_wildcard
   import lan_only
-  root * /www/stack
-  file_server
+  reverse_proxy cadvisor:8080
+}
+
+# ---------------------------------------------------------------------------
+# HTTP → HTTPS redirect
+# ---------------------------------------------------------------------------
+http:// {
+  redir https://{host}{uri} permanent
 }

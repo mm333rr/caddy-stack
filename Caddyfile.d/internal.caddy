@@ -51,9 +51,15 @@ radarr.capes.local {
   reverse_proxy arr-radarr:7878
 }
 
-overseerr.capes.local {
+seerr.capes.local {
   import tls_internal
   reverse_proxy arr-overseerr:5055
+}
+
+# Legacy redirect — overseerr.capes.local -> seerr.capes.local
+overseerr.capes.local {
+  import tls_internal
+  redir https://seerr.capes.local{uri} permanent
 }
 
 prowlarr.capes.local {
