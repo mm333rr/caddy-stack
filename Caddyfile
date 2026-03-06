@@ -60,6 +60,7 @@ stack.am180.us {
 # ---------------------------------------------------------------------------
 grafana.am180.us {
   import tls_wildcard
+  import lan_only
   reverse_proxy grafana:3000
 }
 
