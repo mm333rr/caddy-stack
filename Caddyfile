@@ -199,20 +199,18 @@ komga.am180.us {
 # ---------------------------------------------------------------------------
 # Book stack — ABS, Kavita, LazyLibrarian (LAN-only)
 # ---------------------------------------------------------------------------
+# Book stack — own app-level auth, no lan_only (iCloud Private Relay compat)
 abs.am180.us {
   import tls_wildcard
-  import lan_only
   reverse_proxy book-audiobookshelf:80
 }
 
 kavita.am180.us {
   import tls_wildcard
-  import lan_only
   reverse_proxy book-kavita:5000
 }
 
 lazylibrarian.am180.us {
   import tls_wildcard
-  import lan_only
   reverse_proxy book-lazylibrarian:5299
 }
