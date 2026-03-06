@@ -2,7 +2,7 @@
 # Caddyfile — am180.us reverse proxy
 # Wildcard cert via Cloudflare DNS-01 challenge.
 # CF_API_TOKEN_FILE injected via Docker secret → /run/secrets/cf_api_token
-# Last updated: 2026-02-26 — audit pass, removed lan_only from public-safe services
+# Last updated: 2026-03-05 — added Tailscale CGNAT 100.64.0.0/10 to lan_only snippet
 # =============================================================================
 
 {
@@ -30,10 +30,10 @@
   }
 }
 
-# LAN-only access snippet
-# Covers: LAN (192.168.x), Docker bridge (172.16-31.x), VPN/Tailscale (10.x), localhost
+# LAN + Tailscale access snippet
+# Covers: LAN (192.168.x), Docker bridge (172.16-31.x), VPN (10.x), Tailscale CGNAT (100.64.x), localhost
 (lan_only) {
-  @external not remote_ip 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 127.0.0.1/8
+  @external not remote_ip 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 100.64.0.0/10 127.0.0.1/8
   respond @external "Forbidden" 403
 }
 
@@ -178,4 +178,19 @@ cadvisor.am180.us {
 # ---------------------------------------------------------------------------
 http:// {
   redir https://{host}{uri} permanent
+}
+
+# ---------------------------------------------------------------------------
+# Library stack — Comics (LAN-only)
+# ---------------------------------------------------------------------------
+mylar3.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy library-mylar3:8090
+}
+
+komga.am180.us {
+  import tls_wildcard
+  import lan_only
+  reverse_proxy library-komga:25600
 }

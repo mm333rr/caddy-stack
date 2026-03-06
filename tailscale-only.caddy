@@ -1,0 +1,16 @@
+# tailscale-only.caddy — Caddy snippet library for Tailscale access control
+# Import from main Caddyfile: import /etc/caddy/tailscale-only.caddy
+
+(tailscale_only) {
+  @not_tailscale {
+    not remote_ip 100.64.0.0/10
+  }
+  respond @not_tailscale "Access denied — Tailscale required" 403
+}
+
+(tailscale_or_lan) {
+  @not_local_or_ts {
+    not remote_ip 100.64.0.0/10 192.168.1.0/24 192.168.168.0/24 127.0.0.1 ::1
+  }
+  respond @not_local_or_ts "Access denied — LAN or Tailscale required" 403
+}
